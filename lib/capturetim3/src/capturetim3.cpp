@@ -8,7 +8,6 @@
 
 #include "capturetim3.h"
 
-
 unsigned int captureVal =0;
 void (*isrCapt)();
 

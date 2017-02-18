@@ -1,7 +1,9 @@
 /*
  Arduino Code v3.0
 */
-//#include <digitalFast.h>
+
+
+#include <Arduino.h>
 #include <timer4.h>
 #include <banc.h>
 #include <TimerOne.h>
@@ -18,8 +20,8 @@ unsigned int timeout =40;                  // not used in this version, kept for
 unsigned int sampling_delay = 100;
 
 byte state_s;
-mode_enum mode= CONFIGURATION;
-
+mode_enum mode = CONFIGURATION;
+serial_port port = USB;
 
 power_data power_sample[NBR_ANALOG_SAMPLE];
 thrust_data thrust_sample[NBR_ANALOG_SAMPLE];
@@ -40,6 +42,25 @@ int tempo =0;
 int diff=0;
 
 
+
+void goto_acq_mode(mode_enum *mode)
+{
+	*mode = ACQUISITION;
+
+	analog_count = 0;
+	flag = 0;
+	start_T4();
+	startCapture();
+}
+
+void goto_conf_mode(mode_enum *mode)
+{
+	*mode = CONFIGURATION;
+	stop_T4();
+	stopCapture();
+	Timer1.setPwmDuty_micros(ESC_OUT, ESC_LOW);
+
+}
 
 void callback_isr()
 {
@@ -74,14 +95,43 @@ void setup() {
 
 void loop() {
 
+
+	/* state machine to select the Serial port to be used */
+
+ switch (port)
+ {
+ case NONE:
+	 if(digitalRead(HC05_COM) == HIGH) port = HC05; // if bluetooth communication is ready, use HC05 port
+	 if(digitalRead(HC05_PWR) == HIGH) port = USB;  // if HC05 module is unpowered, go back to USB com.
+	 break;
+
+ case USB:
+	 if(digitalRead(HC05_PWR) == LOW)
+		{
+		 	 port = NONE; // if HC05 module is powered, go to NONE state to wait communication to be ready
+		 	 goto_conf_mode(&mode);
+		}
+	 break;
+
+ case HC05:
+	 if(digitalRead(HC05_COM) == LOW)
+	 {
+		 port = NONE; // if bluetoth communication is lost
+		 goto_conf_mode(&mode);
+	 }
+	 break;
+ }
+
+
   if(mode==CONFIGURATION)
   {
-       byte_avail =Serial.available();
+       byte_avail = Serial.available();
        if(byte_avail)
        {
          Serial.readBytes(buffer_in,byte_avail);
          decode_trame(buffer_in,&mode,&sampling_delay,&nbr_sample,&timeout);
          setPeriod_T4(sampling_delay >> ANALOG_SHIFT);
+         if(mode == ACQUISITION) goto_acq_mode(&mode);
        }
 
      getState_sensors(&state_s);
@@ -100,8 +150,7 @@ void loop() {
       esc_value = atoi(buffer_in);
       if(esc_value == 0)
        {
-         Timer1.setPwmDuty_micros(ESC_OUT, ESC_LOW);
-         mode = CONFIGURATION;
+    	  goto_conf_mode(&mode);
        }
        else Timer1.setPwmDuty_micros(ESC_OUT, esc_value); //ESC
      }

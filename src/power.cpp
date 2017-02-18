@@ -8,6 +8,7 @@
 #include "Arduino.h"
 #include "banc.h"
 
+
 power_data read_power()
 {
     power_data result;

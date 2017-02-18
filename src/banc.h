@@ -115,10 +115,19 @@ void getState_sensors(byte *state);
 
 /// --- DATA --- ///
 
+enum serial_port {
+	NONE,
+	USB,
+	HC05
+};
+
 enum mode_enum {
 CONFIGURATION,
 ACQUISITION
 };
+
+//void goto_acq_mode(mode_enum *mode);
+//void goto_conf_mode(mode_enum *mode);
 
 int ftoa(char *a, double f, int precision);
 int build_data_string(char*str,rpm_data *rpm, thrust_data *thrust, power_data *power,byte *state);
