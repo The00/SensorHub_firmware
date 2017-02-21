@@ -7,7 +7,7 @@
 #include <timer4.h>
 #include <banc.h>
 #include <TimerOne.h>
-
+#include "serial_wrapper.h"
 
 /// Variables globales /
 
@@ -21,7 +21,7 @@ unsigned int sampling_delay = 100;
 
 byte state_s;
 mode_enum mode = CONFIGURATION;
-serial_port port = USB;
+serial_port port = NONE;
 
 power_data power_sample[NBR_ANALOG_SAMPLE];
 thrust_data thrust_sample[NBR_ANALOG_SAMPLE];
@@ -81,7 +81,8 @@ void callback_isr()
 }
 
 void setup() {
- Serial.begin(115200);
+ Serials.begin(115200);
+
  init_pins();
  init_rpm();
 
@@ -90,25 +91,24 @@ void setup() {
  Timer1.initialize(20000); // timer1 generates the PWM for the ESC (period = 20ms)
  Timer1.pwm(ESC_OUT, 50); // 50 (on 1024) = duty cycle ~ 950µs
 
- start_T4();
+//start_T4();
 }
 
 void loop() {
 
-
 	/* state machine to select the Serial port to be used */
-
  switch (port)
  {
  case NONE:
 	 if(digitalRead(HC05_COM) == HIGH) port = HC05; // if bluetooth communication is ready, use HC05 port
-	 if(digitalRead(HC05_PWR) == HIGH) port = USB;  // if HC05 module is unpowered, go back to USB com.
+	 if(Serial) port = USB;// if USB serial port is open, goe to USB com
+	 delay(20);
 	 break;
 
  case USB:
-	 if(digitalRead(HC05_PWR) == LOW)
+	 if(!Serial)
 		{
-		 	 port = NONE; // if HC05 module is powered, go to NONE state to wait communication to be ready
+		 	 port = NONE; 				// if USB com port is closed, go to NONE state
 		 	 goto_conf_mode(&mode);
 		}
 	 break;
@@ -116,19 +116,28 @@ void loop() {
  case HC05:
 	 if(digitalRead(HC05_COM) == LOW)
 	 {
-		 port = NONE; // if bluetoth communication is lost
+		 port = NONE; 				// if bluetooth communication is lost
 		 goto_conf_mode(&mode);
 	 }
 	 break;
  }
+ Serials.setPort(port);
+
+
+
+
+/* ----- main  loop -----*/
+
+if(port != NONE) // if a COM port is open
+{
 
 
   if(mode==CONFIGURATION)
   {
-       byte_avail = Serial.available();
+       byte_avail = Serials.available();
        if(byte_avail)
        {
-         Serial.readBytes(buffer_in,byte_avail);
+         Serials.readBytes(buffer_in,byte_avail);
          decode_trame(buffer_in,&mode,&sampling_delay,&nbr_sample,&timeout);
          setPeriod_T4(sampling_delay >> ANALOG_SHIFT);
          if(mode == ACQUISITION) goto_acq_mode(&mode);
@@ -136,17 +145,17 @@ void loop() {
 
      getState_sensors(&state_s);
      sprintf(buffer_out,"%03d",state_s);
-     Serial.println(buffer_out);
+     Serials.println(buffer_out);
      delay(50);
   }
 
    else if(mode==ACQUISITION)
   {
 
-    byte_avail =Serial.available();
+    byte_avail =Serials.available();
     if(byte_avail)
     {
-      Serial.readBytes(buffer_in,byte_avail);
+      Serials.readBytes(buffer_in,byte_avail);
       esc_value = atoi(buffer_in);
       if(esc_value == 0)
        {
@@ -186,7 +195,7 @@ void loop() {
         if(diff>0) delay(diff);
 
         /* Send data*/
-        Serial.print(trame);
+        Serials.print(trame);
         lasttempo = tempo;
 
         /* re-enable interrupt */
@@ -194,6 +203,6 @@ void loop() {
         startCapture();
       }
 
-  }
-
+  	  }
+	}
 }
