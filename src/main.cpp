@@ -146,7 +146,7 @@ if(port != NONE) // if a COM port is open
      getState_sensors(&state_s);
      sprintf(buffer_out,"%03d",state_s);
      Serials.println(buffer_out);
-     delay(50);
+     delay(10);
   }
 
    else if(mode==ACQUISITION)

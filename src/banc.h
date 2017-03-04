@@ -23,8 +23,8 @@
 
 #define THRUST_IN1  A1
 #define THRUST_IN2  A0
-#define P_CURRENT   A2
-#define P_VOLTAGE   A3
+#define P_CURRENT   A3
+#define P_VOLTAGE   A2
 #define CTN_PLUS 	A4
 #define CTN_MINUS 	A5
 
