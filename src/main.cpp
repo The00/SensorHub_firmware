@@ -73,8 +73,8 @@ void callback_isr()
     {
         analog_count = 0;
         /* disable interrupt */
-        stop_T4();
-        stopCapture();
+        stop_T4();		// stop analog sensor measurement
+        stopCapture(); // stop RPM measurement
         flag = 1;
     }
 
@@ -89,9 +89,7 @@ void setup() {
  setup_T4(sampling_delay >> ANALOG_SHIFT, callback_isr);
 
  Timer1.initialize(20000); // timer1 generates the PWM for the ESC (period = 20ms)
- Timer1.pwm(ESC_OUT, 50); // 50 (on 1024) = duty cycle ~ 950Âµs
-
-//start_T4();
+ Timer1.pwm(ESC_OUT, 50); // 50 (on 1024) = duty cycle ~ 950µs
 }
 
 void loop() {
@@ -200,7 +198,7 @@ if(port != NONE) // if a COM port is open
 
         /* re-enable interrupt */
         start_T4();
-        startCapture();
+       // startCapture(); // already done in getRpmData
       }
 
   	  }
