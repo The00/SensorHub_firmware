@@ -22,7 +22,7 @@ public:
 
 	serial_port getPort();
 	void setPort(serial_port port);
-	void begin(int baudrate);
+	void begin(unsigned long baudrate);
 	int available();
 	size_t readBytes( char *buffer, size_t length); // read chars from stream into buffer
 	size_t readBytes( uint8_t *buffer, size_t length) { return readBytes((char *)buffer, length); }

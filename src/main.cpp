@@ -21,7 +21,6 @@ unsigned int sampling_delay = 100;
 
 byte state_s;
 mode_enum mode = CONFIGURATION;
-serial_port port = NONE;
 
 power_data power_sample[NBR_ANALOG_SAMPLE];
 thrust_data thrust_sample[NBR_ANALOG_SAMPLE];
@@ -95,38 +94,23 @@ void setup() {
 void loop() {
 
 	/* state machine to select the Serial port to be used */
- switch (port)
- {
- case NONE:
-	 if(digitalRead(HC05_COM) == HIGH) port = HC05; // if bluetooth communication is ready, use HC05 port
-	 if(Serial) port = USB;// if USB serial port is open, goe to USB com
-	 delay(20);
-	 break;
 
- case USB:
-	 if(!Serial)
-		{
-		 	 port = NONE; 				// if USB com port is closed, go to NONE state
-		 	 goto_conf_mode(&mode);
-		}
-	 break;
-
- case HC05:
-	 if(digitalRead(HC05_COM) == LOW)
+ if(digitalRead(HC05_COM) == HIGH) Serials.setPort(HC05);  // if bluetooth communication is ready, use HC05 port
+ else if(digitalRead(HC05_PWR) == HIGH) // if HC05 is unpowered, use USB
 	 {
-		 port = NONE; 				// if bluetooth communication is lost
+	 	if(Serials.getPort() == HC05) goto_conf_mode(&mode);
+	 	Serials.setPort(USB);
+	 }
+ else if(Serials.getPort() != NONE)
+	 {
+		 Serials.setPort(NONE);
 		 goto_conf_mode(&mode);
 	 }
-	 break;
- }
- Serials.setPort(port);
-
-
 
 
 /* ----- main  loop -----*/
 
-if(port != NONE) // if a COM port is open
+if(Serials.getPort() != NONE) // if a COM port is open
 {
 
 

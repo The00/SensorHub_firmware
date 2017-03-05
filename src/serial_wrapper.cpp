@@ -41,7 +41,7 @@ size_t Serial_wrapper::readBytes( char *buffer, size_t length)
 
 }
 
-void Serial_wrapper::begin(int baudrate)
+void Serial_wrapper::begin(unsigned long baudrate)
 {
 	Serial1.begin(baudrate);
 	Serial.begin(baudrate);
@@ -50,14 +50,14 @@ void Serial_wrapper::begin(int baudrate)
 size_t Serial_wrapper::println(const char c[])
 {
 	if(used_port == USB) return Serial.println(c);
-	else if(used_port) return Serial1.println(c);
+	else if(used_port == HC05) return Serial1.println(c);
 	else return 0;
 }
 
 size_t Serial_wrapper::print(const char str[])
 {
 	if(used_port == USB) return Serial.print(str);
-	else if(used_port) return Serial1.print(str);
+	else if(used_port == HC05) return Serial1.print(str);
 	else return 0;
 }
 
