@@ -17,10 +17,10 @@ power_data power;
 
 unsigned int nbr_sample = MAX_RPM_SAMPLE;   // not used in this version, kept for comptability
 unsigned int timeout =40;                  // not used in this version, kept for comptability
-unsigned int sampling_delay = 100;
+unsigned int sampling_delay =100;
 
 byte state_s;
-mode_enum mode = CONFIGURATION;
+mode_enum mode =CONFIGURATION;
 
 power_data power_sample[NBR_ANALOG_SAMPLE];
 thrust_data thrust_sample[NBR_ANALOG_SAMPLE];
@@ -127,7 +127,7 @@ if(Serials.getPort() != NONE) // if a COM port is open
 
      getState_sensors(&state_s);
      sprintf(buffer_out,"%03d",state_s);
-     Serials.println(buffer_out);
+     Serials.print(buffer_out);
      delay(10);
   }
 
@@ -169,6 +169,8 @@ if(Serials.getPort() != NONE) // if a COM port is open
 
        /* process RPM data  */
         getRpmData(&rpm);
+
+        getState_sensors(&state_s);
         build_data_string(trame,&rpm,&thrust,&power,&state_s);
 
         /* little delay to match with the target sampling delay */
