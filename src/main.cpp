@@ -26,7 +26,7 @@ power_data power_sample[NBR_ANALOG_SAMPLE];
 thrust_data thrust_sample[NBR_ANALOG_SAMPLE];
 
 char trame[50];
-char buffer_in[10];
+char buffer_in[L_TRAME_CONFIG];
 char buffer_out[4];
 volatile char analog_count = 0;
 volatile char flag =0;
@@ -47,6 +47,8 @@ void goto_acq_mode(mode_enum *mode)
 	*mode = ACQUISITION;
 
 	analog_count = 0;
+	lasttempo =0;
+	diff = 0;
 	flag = 0;
 	start_T4();
 	startCapture();
@@ -119,7 +121,7 @@ if(Serials.getPort() != NONE) // if a COM port is open
        byte_avail = Serials.available();
        if(byte_avail)
        {
-         Serials.readBytes(buffer_in,byte_avail);
+         Serials.readBytes(buffer_in,L_TRAME_CONFIG);
          decode_trame(buffer_in,&mode,&sampling_delay,&nbr_sample,&timeout);
          setPeriod_T4(sampling_delay >> ANALOG_SHIFT);
          if(mode == ACQUISITION) goto_acq_mode(&mode);
@@ -137,7 +139,7 @@ if(Serials.getPort() != NONE) // if a COM port is open
     byte_avail =Serials.available();
     if(byte_avail)
     {
-      Serials.readBytes(buffer_in,byte_avail);
+      Serials.readBytes(buffer_in,4);
       esc_value = atoi(buffer_in);
       if(esc_value == 0)
        {
@@ -175,7 +177,7 @@ if(Serials.getPort() != NONE) // if a COM port is open
 
         /* little delay to match with the target sampling delay */
         tempo = millis();
-        diff = (int)(sampling_delay-(tempo-lasttempo));
+        if(lasttempo !=0) diff = (int)(sampling_delay-(tempo-lasttempo));
         if(diff>0) delay(diff);
 
         /* Send data*/

@@ -55,7 +55,7 @@
 //#define B2_T -0.71
 #define DEL_STR             ";"
 #define DEL_CAR             ';'
-#define L_TRAME_CONFIG      20
+#define L_TRAME_CONFIG      16
 #define ESC_LOW             900
 
 /// --- RPM --- ///
